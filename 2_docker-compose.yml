@@ -1,0 +1,46 @@
+services:
+  db_api:
+    image: drhy6yc/db_api:0.0.1-001
+    ports:
+      - "8000:8000"
+    environment:
+      DB_IS_CREATED: ${DB_IS_CREATED}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      DB_NAME: ${DB_NAME}
+      DB_SQLite: ${DB_SQLite}
+      DB_DBMS: ${DB_DBMS}
+      DB_ECHO: ${DB_ECHO}
+    networks:
+      - network_app
+  postgres:
+    image: postgres:15.7-alpine3.20
+    container_name: postgres-dev
+    environment:
+      POSTGRES_PASSWORD: ${PG_PASSWORD}
+      POSTGRES_USER: ${PG_USER}
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    networks:
+      - network_app
+
+    pgadmin:
+      container_name: pgadmin-dev
+      image: dpage/pgadmin4:8.9
+      environment:
+        PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+        PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+      volumes:
+        - ./pgadmin-data:/var/lib/pgadmin
+      ports:
+        - "5050:80"
+      restart: unless-stopped
+      depends_on:
+        - postgres
+      networks:
+        - network_app
