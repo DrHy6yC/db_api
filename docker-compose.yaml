@@ -1,0 +1,18 @@
+services:
+  postgres:
+    image:  postgres:15.7-alpine3.20
+    container_name: postgres-dev
+    environment:
+      POSTGRES_PASSWORD: ${PG_PASSWORD}
+      POSTGRES_USER: ${PG_USER}
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    networks:
+      - network_app
+
+networks:
+  network_app:
+    driver: bridge
