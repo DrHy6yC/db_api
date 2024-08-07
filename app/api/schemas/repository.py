@@ -1,9 +1,9 @@
 from icecream import ic
 from sqlalchemy import select
 
-from engine import async_session_sql_connect
-from schema import STaskAdd, STask
-from ORM import TaskOrm
+from db.engine import async_session_sql_connect
+from api.schemas.schema import STaskAdd, STask
+from db.ORM import TaskOrm
 
 
 class TaskRepository:

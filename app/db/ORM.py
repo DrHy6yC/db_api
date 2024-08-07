@@ -4,11 +4,11 @@ from typing import Optional
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
-class Model(DeclarativeBase):
+class ModelORM(DeclarativeBase):
     pass
 
 
-class TaskOrm(Model):
+class TaskOrm(ModelORM):
     __tablename__ = "tasks"
 
     id: Mapped[int] = mapped_column(primary_key=True)
