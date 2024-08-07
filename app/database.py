@@ -1,8 +1,9 @@
-from .config_db import *
 from icecream import ic
 
+from config_db import *
 
-class DBMYSQL:
+
+class DBAPP:
     """Класс который хранит в себе параметры из .env связанные с БД, создает строку подключения к БД.
     Может одновременно работать в асинхронном и синхронном режиме исполльзуя два движка подключения
 
