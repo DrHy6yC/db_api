@@ -34,7 +34,7 @@ class DBAPP:
         ic(dsn_self)
         return dsn_self
 
-    def get_async_engine(self, is_echo: bool) -> AsyncEngine:
+    def get_async_engine(self, is_echo: bool = True) -> AsyncEngine:
         """
         Функция запуска главного движка sql/подключения синхронно
         :dsn_db: принимает в себя строку подключения
@@ -47,5 +47,5 @@ class DBAPP:
         )
         return engine
 
-    def get_async_sessionmaker(self, is_echo: bool) -> async_sessionmaker:
+    def get_async_sessionmaker(self, is_echo: bool = True) -> async_sessionmaker:
         return async_sessionmaker(self.get_async_engine(is_echo), expire_on_commit=False)
