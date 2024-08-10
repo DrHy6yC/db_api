@@ -1,47 +1,11 @@
 from icecream import ic
 
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncEngine
 from config_db import *
 
 
 class DBAPP:
-    """Класс который хранит в себе параметры из .env связанные с БД, создает строку подключения к БД.
-    Может одновременно работать в асинхронном и синхронном режиме исполльзуя два движка подключения
 
-    Note:
-    Для работы с двумя  и более разными СУБД можно наследоваться от этого класса, переопределив необходимые атрибуты
-
-    Attributes:
-    ----------
-    DB_IS_CREATED : str
-        По этому параметру определяется будет ли созданы и пересозданы таблицы в БД(если True)
-        В .env используется строка True/False для перевода в bool использовать метод get_db_is_created
-    DB_HOST : str
-        Хост сервера с БД
-    DB_PORT : str
-        Порт подключения к БД
-    DB_USER : str
-        Логин пользователя у которого есть доступ к БД
-    DB_PASS : str
-        пароль учетной записи которой  находится в переменной DB_USER
-    DB_NAME : str
-        Имя бд к которой подключаемся
-    DB_SQLite : str
-        Путь и имя файла к БД SQL lite (name_db.db)
-    DB_DBMS : str
-        Основной тип СУБД для работы (MYSQL/PGSQL/SQLite)
-    DB_ECHO : str
-        Отключение логирования движка
-
-    Methods:
-    -------
-    get_dsn()
-        Необходим для получения строки подключения(dsn)
-
-    get_db_is_created()
-        Понадобится что бы перевести строку .env в bool python
-    """
-
-    DB_IS_CREATED: str = DB_IS_CREATED
     DB_HOST: str = DB_HOST
     DB_PORT: str = DB_PORT
     DB_USER: str = DB_USER
@@ -69,3 +33,19 @@ class DBAPP:
         dsn_self = f"{driver}{db_params}"
         ic(dsn_self)
         return dsn_self
+
+    def get_async_engine(self, is_echo: bool) -> AsyncEngine:
+        """
+        Функция запуска главного движка sql/подключения синхронно
+        :dsn_db: принимает в себя строку подключения
+        :is_echo: включения/отключения транслирования команд SQL генерируемых sqlalchemy в консоль
+        :return: возвращает экземпляр класса Engine из sqlalchemy.engine.base
+        """
+        engine = create_async_engine(
+            url=self.get_async_dsn(),
+            echo=is_echo
+        )
+        return engine
+
+    def get_async_sessionmaker(self, is_echo: bool) -> async_sessionmaker:
+        return async_sessionmaker(self.get_async_engine(is_echo), expire_on_commit=False)

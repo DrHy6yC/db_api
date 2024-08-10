@@ -15,7 +15,6 @@ def get_bool_from_str(text: str) -> bool:
 
 load_dotenv()
 
-DB_IS_CREATED: bool = get_bool_from_str(getenv('DB_IS_CREATED'))
 DB_HOST: str = getenv('DB_HOST')
 DB_PORT: str = getenv('DB_PORT')
 DB_USER: str = getenv('DB_USER')
