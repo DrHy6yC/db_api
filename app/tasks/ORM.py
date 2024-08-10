@@ -1,11 +1,8 @@
 from typing import Optional
+from db.engine import ModelORM
 
 
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-
-
-class ModelORM(DeclarativeBase):
-    pass
+from sqlalchemy.orm import Mapped, mapped_column
 
 
 class TaskOrm(ModelORM):

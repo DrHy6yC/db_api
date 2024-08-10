@@ -3,7 +3,7 @@ from fastapi import FastAPI
 
 from contextlib import asynccontextmanager
 
-from api.router import router as tasks_router
+from tasks.router import router as tasks_router
 
 
 @asynccontextmanager
@@ -14,10 +14,11 @@ async def lifespan(apps: FastAPI):
     ic("Api выключен")
 
 
-app = FastAPI(lifespan=lifespan)
-app.include_router(tasks_router)
+app = FastAPI(lifespan=lifespan, title="Api DB")
 
 
-@app.get("/")
+@app.get("/", tags=["Greetings"])
 async def hello():
     return {"Message": "HI!"}
+
+app.include_router(tasks_router)
