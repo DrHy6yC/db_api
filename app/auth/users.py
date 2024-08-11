@@ -1,4 +1,5 @@
 import uuid
+import redis.asyncio
 
 from typing import AsyncGenerator, Optional
 
@@ -7,8 +8,8 @@ from fastapi_users import schemas, BaseUserManager, FastAPIUsers, UUIDIDMixin
 from fastapi_users.db import SQLAlchemyBaseUserTableUUID
 from fastapi_users.authentication import (
     AuthenticationBackend,
-    BearerTransport,
-    JWTStrategy,
+    CookieTransport,
+    RedisStrategy,
 )
 from fastapi_users.db import SQLAlchemyUserDatabase
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -79,17 +80,20 @@ async def get_user_manager(user_db: SQLAlchemyUserDatabase = Depends(get_user_db
     yield UserManager(user_db)
 
 
-bearer_transport = BearerTransport(tokenUrl="auth/jwt/login")
+cookie_transport = CookieTransport(cookie_max_age=3600)
 
 
-def get_jwt_strategy() -> JWTStrategy:
-    return JWTStrategy(secret=SECRET, lifetime_seconds=3600)
+redis = redis.asyncio.from_url("redis://localhost:6380", decode_responses=True)
+
+
+def get_redis_strategy() -> RedisStrategy:
+    return RedisStrategy(redis, lifetime_seconds=3600)
 
 
 auth_backend = AuthenticationBackend(
-    name="jwt",
-    transport=bearer_transport,
-    get_strategy=get_jwt_strategy,
+    name="api_db_auth",
+    transport=cookie_transport,
+    get_strategy=get_redis_strategy,
 )
 
 fastapi_users = FastAPIUsers[User, uuid.UUID](get_user_manager, [auth_backend])

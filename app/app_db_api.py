@@ -18,7 +18,7 @@ async def lifespan(apps: FastAPI):
 
 app = FastAPI(lifespan=lifespan, title="Api DB")
 
-app.include_router(tasks_router)
+app.include_router(tasks_router, dependencies=[Depends(current_active_user)])
 
 
 @app.get("/", tags=["Greetings"])
@@ -27,30 +27,30 @@ async def hello():
 
 
 app.include_router(
-    fastapi_users.get_auth_router(auth_backend), prefix="/auth/jwt", tags=["auth"]
+    fastapi_users.get_auth_router(auth_backend), prefix="/auth", tags=["Authorization"]
 )
 app.include_router(
     fastapi_users.get_register_router(UserRead, UserCreate),
     prefix="/auth",
-    tags=["auth"],
+    tags=["Authorization"],
 )
 app.include_router(
     fastapi_users.get_reset_password_router(),
     prefix="/auth",
-    tags=["auth"],
+    tags=["Authorization"],
 )
 app.include_router(
     fastapi_users.get_verify_router(UserRead),
     prefix="/auth",
-    tags=["auth"],
+    tags=["Authorization"],
 )
 app.include_router(
     fastapi_users.get_users_router(UserRead, UserUpdate),
-    prefix="/users",
-    tags=["users"],
+    prefix="/auht_users",
+    tags=["Authorization Users"],
 )
 
 
-@app.get("/authenticated-route")
+@app.get("/authenticated-route", tags=["Authenticated"])
 async def authenticated_route(user: User = Depends(current_active_user)):
     return {"message": f"Hello {user.email}!"}
