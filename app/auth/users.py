@@ -4,14 +4,14 @@ import redis.asyncio
 from typing import AsyncGenerator, Optional
 
 from fastapi import Depends, Request
-from fastapi_users import schemas, BaseUserManager, FastAPIUsers, IntegerIDMixin
-from fastapi_users.db import SQLAlchemyBaseUserTableUUID
+from fastapi_users import exceptions, models, schemas, BaseUserManager, FastAPIUsers, IntegerIDMixin
 from fastapi_users.authentication import (
     AuthenticationBackend,
     BearerTransport,
     RedisStrategy,
 )
 from fastapi_users.db import SQLAlchemyUserDatabase
+from fastapi_users_db_sqlalchemy import SQLAlchemyBaseUserTable
 from sqlalchemy import Column, String, Boolean, Integer, TIMESTAMP, ForeignKey
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
@@ -29,7 +29,7 @@ class Base(DeclarativeBase):
     pass
 
 
-class User(SQLAlchemyBaseUserTableUUID, Base):
+class User(SQLAlchemyBaseUserTable[int], Base):
     id = Column(Integer, primary_key=True)
     email = Column(String, nullable=False)
     username = Column(String, nullable=False)
@@ -68,15 +68,31 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
     async def on_after_register(self, user: User, request: Optional[Request] = None):
         print(f"User {user.id} has registered.")
 
-    async def on_after_forgot_password(
-        self, user: User, token: str, request: Optional[Request] = None
-    ):
-        print(f"User {user.id} has forgot their password. Reset token: {token}")
+    async def create(
+            self,
+            user_create: schemas.UC,
+            safe: bool = False,
+            request: Optional[Request] = None,
+    ) -> models.UP:
+        await self.validate_password(user_create.password, user_create)
 
-    async def on_after_request_verify(
-        self, user: User, token: str, request: Optional[Request] = None
-    ):
-        print(f"Verification requested for user {user.id}. Verification token: {token}")
+        existing_user = await self.user_db.get_by_email(user_create.email)
+        if existing_user is not None:
+            raise exceptions.UserAlreadyExists()
+
+        user_dict = (
+            user_create.create_update_dict()
+            if safe
+            else user_create.create_update_dict_superuser()
+        )
+        password = user_dict.pop("password")
+        user_dict["hashed_password"] = self.password_helper.hash(password)
+
+        created_user = await self.user_db.create(user_dict)
+
+        await self.on_after_register(created_user, request)
+
+        return created_user
 
 
 async def create_db_and_tables():
