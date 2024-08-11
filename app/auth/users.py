@@ -1,17 +1,18 @@
-import uuid
+from datetime import datetime
 import redis.asyncio
 
 from typing import AsyncGenerator, Optional
 
 from fastapi import Depends, Request
-from fastapi_users import schemas, BaseUserManager, FastAPIUsers, UUIDIDMixin
+from fastapi_users import schemas, BaseUserManager, FastAPIUsers, IntegerIDMixin
 from fastapi_users.db import SQLAlchemyBaseUserTableUUID
 from fastapi_users.authentication import (
     AuthenticationBackend,
-    CookieTransport,
+    BearerTransport,
     RedisStrategy,
 )
 from fastapi_users.db import SQLAlchemyUserDatabase
+from sqlalchemy import Column, String, Boolean, Integer, TIMESTAMP, ForeignKey
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 
@@ -29,22 +30,38 @@ class Base(DeclarativeBase):
 
 
 class User(SQLAlchemyBaseUserTableUUID, Base):
-    pass
+    id = Column(Integer, primary_key=True)
+    email = Column(String, nullable=False)
+    username = Column(String, nullable=False)
+    registered_at = Column(TIMESTAMP, default=datetime.utcnow)
+    hashed_password: str = Column(String(length=1024), nullable=False)
+    is_active: bool = Column(Boolean, default=True, nullable=False)
+    is_superuser: bool = Column(Boolean, default=False, nullable=False)
+    is_verified: bool = Column(Boolean, default=False, nullable=False)
 
 
-class UserRead(schemas.BaseUser[uuid.UUID]):
-    pass
+class UserRead(schemas.BaseUser[int]):
+    id: int
+    email: str
+    username: str
+    is_active: bool = True
+    is_superuser: bool = False
+    is_verified: bool = False
+
+    class Config:
+        orm_mode = True
 
 
 class UserCreate(schemas.BaseUserCreate):
-    pass
+    username: str
+    email: str
+    password: str
+    is_active: Optional[bool] = True
+    is_superuser: Optional[bool] = False
+    is_verified: Optional[bool] = False
 
 
-class UserUpdate(schemas.BaseUserUpdate):
-    pass
-
-
-class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
+class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
     reset_password_token_secret = SECRET
     verification_token_secret = SECRET
 
@@ -80,22 +97,22 @@ async def get_user_manager(user_db: SQLAlchemyUserDatabase = Depends(get_user_db
     yield UserManager(user_db)
 
 
-cookie_transport = CookieTransport(cookie_max_age=3600)
+bearer_transport = BearerTransport(tokenUrl="auth/login")
 
 
 redis = redis.asyncio.from_url("redis://localhost:6380", decode_responses=True)
 
 
 def get_redis_strategy() -> RedisStrategy:
-    return RedisStrategy(redis, lifetime_seconds=3600)
+    return RedisStrategy(redis, lifetime_seconds=120)
 
 
 auth_backend = AuthenticationBackend(
     name="api_db_auth",
-    transport=cookie_transport,
+    transport=bearer_transport,
     get_strategy=get_redis_strategy,
 )
 
-fastapi_users = FastAPIUsers[User, uuid.UUID](get_user_manager, [auth_backend])
+fastapi_users = FastAPIUsers[User, int](get_user_manager, [auth_backend])
 
 current_active_user = fastapi_users.current_user(active=True)

@@ -5,12 +5,13 @@ from contextlib import asynccontextmanager
 
 from tasks.router import router as tasks_router
 from auth.users import create_db_and_tables, auth_backend, fastapi_users \
-    , UserRead, UserCreate, UserUpdate, User, current_active_user
+    , UserRead, UserCreate, User, current_active_user
 
 
 @asynccontextmanager
 async def lifespan(apps: FastAPI):
     await create_db_and_tables()
+
     ic("Api запущен")
     yield
     ic("Api выключен")
@@ -27,28 +28,25 @@ async def hello():
 
 
 app.include_router(
-    fastapi_users.get_auth_router(auth_backend), prefix="/auth", tags=["Authorization"]
+    fastapi_users.get_auth_router(auth_backend),
+    prefix="/auth",
+    tags=["Authorization"]
 )
 app.include_router(
     fastapi_users.get_register_router(UserRead, UserCreate),
     prefix="/auth",
     tags=["Authorization"],
 )
-app.include_router(
-    fastapi_users.get_reset_password_router(),
-    prefix="/auth",
-    tags=["Authorization"],
-)
-app.include_router(
-    fastapi_users.get_verify_router(UserRead),
-    prefix="/auth",
-    tags=["Authorization"],
-)
-app.include_router(
-    fastapi_users.get_users_router(UserRead, UserUpdate),
-    prefix="/auht_users",
-    tags=["Authorization Users"],
-)
+# app.include_router(
+#     fastapi_users.get_reset_password_router(),
+#     prefix="/auth",
+#     tags=["Authorization"],
+# )
+# app.include_router(
+#     fastapi_users.get_verify_router(UserRead),
+#     prefix="/auth",
+#     tags=["Authorization"],
+# )
 
 
 @app.get("/authenticated-route", tags=["Authenticated"])
