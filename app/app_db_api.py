@@ -1,17 +1,17 @@
 from icecream import ic
-from fastapi import FastAPI, Depends
-
 from contextlib import asynccontextmanager
 
+from fastapi import FastAPI, Depends
+
+from auth.models import User
+from auth.schemas import UserCreate, UserRead
+from auth.utils import create_db_and_tables, auth_backend, fastapi_users_param, current_active_user
 from tasks.router import router as tasks_router
-from auth.users import create_db_and_tables, auth_backend, fastapi_users \
-    , UserRead, UserCreate, User, current_active_user
 
 
 @asynccontextmanager
 async def lifespan(apps: FastAPI):
     await create_db_and_tables()
-
     ic("Api запущен")
     yield
     ic("Api выключен")
@@ -28,25 +28,15 @@ async def hello():
 
 
 app.include_router(
-    fastapi_users.get_auth_router(auth_backend),
+    fastapi_users_param.get_auth_router(auth_backend),
     prefix="/auth",
     tags=["Authorization"]
 )
 app.include_router(
-    fastapi_users.get_register_router(UserRead, UserCreate),
+    fastapi_users_param.get_register_router(UserRead, UserCreate),
     prefix="/auth",
     tags=["Authorization"],
 )
-# app.include_router(
-#     fastapi_users.get_reset_password_router(),
-#     prefix="/auth",
-#     tags=["Authorization"],
-# )
-# app.include_router(
-#     fastapi_users.get_verify_router(UserRead),
-#     prefix="/auth",
-#     tags=["Authorization"],
-# )
 
 
 @app.get("/authenticated-route", tags=["Authenticated"])
