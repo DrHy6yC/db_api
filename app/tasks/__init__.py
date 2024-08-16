@@ -1,4 +1,4 @@
 import site
 from pathlib import Path
 
-site.addsitedir(Path(__file__).parent)
+site.addsitedir(str(Path(__file__).parent))

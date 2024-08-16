@@ -1,5 +1,3 @@
-from icecream import ic
-
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncEngine
 from config_db import *
 
@@ -15,13 +13,13 @@ class DBAPP:
     DB_DBMS: str = DB_DBMS
     DB_ECHO: str = DB_ECHO
 
-    def get_async_dsn(self) -> str:
+    def get_async_dsn(self, db_name: str = DB_NAME) -> str:
         """Метод для получения строки асинхронного подключения из .env
         :return: строку асинхронного подключения (str)
         """
 
         driver = ""
-        db_params = f"{self.DB_USER}:{self.DB_PASS}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+        db_params = f"{self.DB_USER}:{self.DB_PASS}@{self.DB_HOST}:{self.DB_PORT}/{db_name}"
         match self.DB_DBMS:
             case 'MYSQL':
                 driver = f"mysql+aiomysql://"
@@ -31,7 +29,6 @@ class DBAPP:
                 driver = f"sqlite+aiosqlite://"
                 db_params = f"/{self.DB_SQLite}"
         dsn_self = f"{driver}{db_params}"
-        ic(dsn_self)
         return dsn_self
 
     def get_async_engine(self, is_echo: bool = True) -> AsyncEngine:

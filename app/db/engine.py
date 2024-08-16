@@ -16,7 +16,8 @@ class ModelORM(DeclarativeBase):
 
 db_app = DBAPP()
 is_echo_db = DB_ECHO
-dns_sql = db_app.get_async_dsn()
+dns_sql_api = db_app.get_async_dsn("Api")
+dns_sql_bot = db_app.get_async_dsn()
 
 sql_async_engine = db_app.get_async_engine(is_echo_db)
 async_session_sql_connect = db_app.get_async_sessionmaker(is_echo_db)

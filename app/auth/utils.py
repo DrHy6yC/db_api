@@ -9,10 +9,10 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from models import User, Base
 from redis_strategy import get_redis_strategy
 from user_manager import UserManager
-from db.engine import dns_sql
+from db.engine import dns_sql_api
 
 
-DATABASE_URL = dns_sql
+DATABASE_URL = dns_sql_api
 
 engine = create_async_engine(DATABASE_URL)
 async_session_maker = async_sessionmaker(engine, expire_on_commit=False)
