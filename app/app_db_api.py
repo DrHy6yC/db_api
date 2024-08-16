@@ -5,13 +5,17 @@ from fastapi import FastAPI, Depends
 
 from auth.models import User
 from auth.schemas import UserCreate, UserRead
-from auth.utils import create_db_and_tables, auth_backend, fastapi_users_param, current_active_user
+from auth.utils import create_db_and_tables as create_user, auth_backend, fastapi_users_param, current_active_user
 from tasks.router import router as tasks_router
+from bot.questionnaire.router import router as questionnaire_router
+from bot.utils import create_db_and_tables as create_bot
 
 
 @asynccontextmanager
 async def lifespan(apps: FastAPI):
-    await create_db_and_tables()
+    await create_user()
+    await create_bot()
+
     ic("Api запущен")
     yield
     ic("Api выключен")
@@ -20,6 +24,7 @@ async def lifespan(apps: FastAPI):
 app = FastAPI(lifespan=lifespan, title="Api DB")
 
 app.include_router(tasks_router, dependencies=[Depends(current_active_user)])
+app.include_router(questionnaire_router, dependencies=[Depends(current_active_user)])
 
 
 @app.get("/", tags=["Greetings"])
